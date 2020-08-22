@@ -10,12 +10,16 @@ provider:
   runtime: nodejs12.x
   stage: ${opt:stage, 'dev'} # default dev or passed by user
   region: ${opt:region, 'us-east-1'} # default us-east-1 or passed by user
+
+
   environment:
     TODO_TABLE: todoapp-todo-${self:provider.stage}
     TODO_TABLE_IDX_NAME : dueDateIndex
     ATTACHMENT_S3_BUCKET: todoapp-attachment-${self:provider.stage}
-    #AUTH_0_SECRET_ID: Auth0Secret-${self:provider.stage}
-    #AUTH_0_SECRET: auth0Secret
+    ATTACHMENT_URL: https://${self:provider.environment.ATTACHMENT_S3_BUCKET}.s3.amazonaws.com/
+    AUTH_0_SECRET_ID: Auth0Secret-${self:provider.stage}
+    AUTH_0_CERT: MIIDDTCCAfWgAwIBAgIJWvTR/Wj3npziMA0GCSqGSIb3DQEBCwUAMCQxIjAgBgNVBAMTGWRldi1ldjIzY3hzby5ldS5hdXRoMC5jb20wHhcNMjAwODIyMTMyNjI0WhcNMzQwNTAxMTMyNjI0WjAkMSIwIAYDVQQDExlkZXYtZXYyM2N4c28uZXUuYXV0aDAuY29tMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEArNUubmW9LBZlPwNmdLu+MIzfwvcwDXObeTQtsQBumk/YUpPcN0GyVXXjna/847D7P0mQT32bPzSC5s0CC13IQgkdS4W5iwCWd+jJ12Y3YyOQzF/LiP9pn6Kpuc/jtenE1CpUkMLWorlwleeSIQn8yHQQKzTnlCsib6Oy5LTr9HB9HwZnEv5TOva9wT/CC2m5JvihInmlrRry20ysZ37/1w1XR+YdlegAX+X07FstFTkxRTMjyNvRpQU5oAVFl8Omxk3YjPG8LefofNCE2Zx+71v8jzAQcxPFmxH/z9qxjh3qiBNXMeFqHHvNTNVg4Qa0hqJ356x1EOlu5b19/pyprQIDAQABo0IwQDAPBgNVHRMBAf8EBTADAQH/MB0GA1UdDgQWBBQD8JpJ8Up7FRPzDaXngoyU/DxP3zAOBgNVHQ8BAf8EBAMCAoQwDQYJKoZIhvcNAQELBQADggEBABZ2GCKXh+V29ofpD0TF4WlQVm9bpQnNZhpjx1oIWoXeQ/rhERfzYOee0k6go4Ga6rs5GcYpVMuH4gWyPE2Zpz382gcR4wbrnMs/hWgVKvG6Rs1Rt6FxhbvElfACn/U8TYiizVG/J0Cu6czNO1j+ZsaKEx9cSkJCQRV1ZzvpQoLYquIRpZaPSyvKpW8QJyuJ4BE9HZYCNvyPfBzSaWMnB4+/7OPD9u1MPLh2GnelDXxk1VlLUcGeJsrPiYkbiwoZHHcz1pGIlfUUdSb2kvuhJ1bYk0SddhqFVCN4t2dH3oLkSlU/zb/C/XR7bmJq4sn51FQ/jeAr3NUd/dkvtQ0U1Eg=
+    SIGNED_URL_EXPIRATION: 300
   iamRoleStatements:
     - Effect: Allow
       Action:
@@ -25,27 +29,30 @@ provider:
     - Effect: Allow
       Action:
         - dynamodb:Scan
-        - dynamodb:GetItem
         - dynamodb:PutItem
         - dynamodb:UpdateItem
-        - dynamodb:Query
+        - dynamodb:GetItem
+        - dynamodb:DeleteItem
       Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODO_TABLE}
-
+    - Effect: Allow
+      Action:
+        - dynamodb:Query
+      Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODO_TABLE}/index/${self:provider.environment.TODO_TABLE_IDX_NAME}
 
 functions:
 
-  # Auth:
-  #   handler: src/lambda/auth/auth0Authorizer.handler
+  Auth:
+    handler: src/lambda/auth/auth0Authorizer.handler
 
-  # # TODO: Configure this function
-  # GetTodos:
-  #   handler: src/lambda/http/getTodos.handler
-  #   events:
-  #     - http:
-  #         method: get
-  #         path: todos
 
-  # TODO: Configure this function
+  GetTodos:
+    handler: src/lambda/http/getTodos.handler
+    events:
+      - http:
+          method: get
+          path: todos
+          cors: true
+
   CreateTodo:
     handler: src/lambda/http/createTodo.handler
     events:
@@ -53,31 +60,32 @@ functions:
           method: post
           path: todos
           cors: true
+          #authorizer: Auth
 
+  UpdateTodo:
+    handler: src/lambda/http/updateTodo.handler
+    events:
+      - http:
+          method: patch
+          # placeholders {} are sent to the event.pathParameters
+          path: todos/{todoId}
+          cors: true
 
-  # # TODO: Configure this function
-  # UpdateTodo:
-  #   handler: src/lambda/http/updateTodo.handler
-  #   events:
-  #     - http:
-  #         method: patch
-  #         path: todos/{todoId}
+  DeleteTodo:
+    handler: src/lambda/http/deleteTodo.handler
+    events:
+      - http:
+          method: delete
+          path: todos/{todoId}
+          cors: true
 
-  # # TODO: Configure this function
-  # DeleteTodo:
-  #   handler: src/lambda/http/deleteTodo.handler
-  #   events:
-  #     - http:
-  #         method: delete
-  #         path: todos/{todoId}
-
-  # # TODO: Configure this function
-  # GenerateUploadUrl:
-  #   handler: src/lambda/http/generateUploadUrl.handler
-  #   events:
-  #     - http:
-  #         method: post
-  #         path: todos/{todoId}/attachment
+  GenerateUploadUrl:
+    handler: src/lambda/http/generateUploadUrl.handler
+    events:
+      - http:
+          method: post
+          path: todos/{todoId}/attachment
+          cors: true
 
 resources:
   Resources:
@@ -90,12 +98,12 @@ resources:
           # non-key attributes are not required (due to schmealess nature)
           - AttributeName: todoId
             AttributeType: S # string type
-          - AttributeName: createdAt
+          - AttributeName: userId
             AttributeType: S # string type
           # - AttributeName: name
           #   AttributeType: S # string type
-          - AttributeName: dueDate
-            AttributeType: S # boolean type
+         # - AttributeName: dueDate
+         #   AttributeType: S # boolean type
           # - AttributeName: done
           #   AttributeType: B # boolean type
          # - AttributeName: attachmentUrl
@@ -106,19 +114,19 @@ resources:
           # composite key ( both together uniquely identify an item)
           - AttributeName: todoId 
             KeyType: HASH # partitionKey : what partition to write item to
-          - AttributeName: createdAt 
-            KeyType: RANGE # sortKey : to sort elements with the same partition key
+       #   - AttributeName: createdAt 
+       #     KeyType: RANGE # sortKey : to sort elements with the same partition key
         BillingMode: PAY_PER_REQUEST
         TableName: ${self:provider.environment.TODO_TABLE}
         # LocalSecondaryIndexes (LSI): Like an additional sort key
         # GlobalSecondaryIndexes (GSI) : Creates a copy with another partition / sort key
-        LocalSecondaryIndexes:
+        GlobalSecondaryIndexes:
           - IndexName: ${self:provider.environment.TODO_TABLE_IDX_NAME}
             KeySchema:
-              - AttributeName: todoId
+              - AttributeName: userId
                 KeyType: HASH
-              - AttributeName: dueDate
-                KeyType: RANGE
+            #  - AttributeName: dueDate
+            #    KeyType: RANGE
             Projection:
               ProjectionType: ALL # What attributes will be copied to an index
 
@@ -126,3 +134,31 @@ resources:
       Type: AWS::S3::Bucket
       Properties:
         BucketName: ${self:provider.environment.ATTACHMENT_S3_BUCKET}
+        CorsConfiguration:
+          CorsRules:
+            -
+              AllowedOrigins:
+                - '*'
+              AllowedHeaders:
+                - '*'
+              AllowedMethods:
+                - GET
+                - PUT
+                - POST
+                - DELETE
+                - HEAD
+              MaxAge: 3000
+ 
+    BucketPolicy:
+        Type: AWS::S3::BucketPolicy
+        Properties:
+          PolicyDocument:
+            Id: MyPolicy
+            Version: "2012-10-17"
+            Statement:
+              - Sid: PublicReadForGetBucketObjects
+                Effect: Allow
+                Principal: '*'
+                Action: 's3:GetObject'
+                Resource: 'arn:aws:s3:::${self:provider.environment.ATTACHMENT_S3_BUCKET}/*'
+          Bucket: !Ref AttachmentBucket
