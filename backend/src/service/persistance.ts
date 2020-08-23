@@ -1,34 +1,34 @@
 import * as AWS  from 'aws-sdk'
 const docClient = new AWS.DynamoDB.DocumentClient()
-import { TodoItem  } from '../models/TodoItem'
-import { UpdateTodoRequest  } from '../requests/UpdateTodoRequest'
+import { DocumentItem  } from '../models/DocumentItem'
+import { UpdateDocumentRequest  } from '../requests/UpdateDocumentRequest'
 const s3 = new AWS.S3({
     signatureVersion: 'v4'
   })
 
     
-export async function persistTodo(newToDoItem: TodoItem) {
+export async function persistDocument(newDocumentItem: DocumentItem) {
     return await docClient.put({
-        TableName: process.env.TODO_TABLE,
-        Item: newToDoItem
+        TableName: process.env.DOCUMENT_TABLE,
+        Item: newDocumentItem
     }).promise()
 }
 
-export async function deleteTodo(todoId: string) {
+export async function deleteDocument(documentId: string) {
     return await docClient.delete({
-        TableName: process.env.TODO_TABLE,
+        TableName: process.env.DOCUMENT_TABLE,
         Key: {
-            todoId: todoId
+            todoId: documentId
         }
       }).promise()
 }
 
-export async function getTodo(userId: string) {
+export async function getDocument(userId: string) {
     // get via hashkey / better for bulk retrival
     // query have filter extensions servers-side
     return await docClient.query({
-        TableName : process.env.TODO_TABLE,
-        IndexName : process.env.TODO_TABLE_IDX_NAME,
+        TableName : process.env.DOCUMENT_TABLE,
+        IndexName : process.env.DOCUMENT_TABLE_IDX_NAME,
         KeyConditionExpression: 'userId = :userId', // :value's are specified below in the ExpressionAttributeValues
         ExpressionAttributeValues: {
             ':userId': userId
@@ -36,18 +36,18 @@ export async function getTodo(userId: string) {
     }).promise()
 }
 
-export async function updateTodo(todoId: string, updatedTodo:UpdateTodoRequest) {
+export async function updateDocument(documentId: string, updatedDocument:UpdateDocumentRequest) {
     return await docClient.update(  {
-        TableName: process.env.TODO_TABLE,
-        Key: {'todoId' : todoId},
-        UpdateExpression : 'set #name = :todo_name, done = :done, dueDate = :due_date',
+        TableName: process.env.DOCUMENT_TABLE,
+        Key: {'documentId' : documentId},
+        UpdateExpression : 'set #name = :document_name, done = :done, dueDate = :due_date',
         ExpressionAttributeNames: {
             '#name' : 'name'
         },
         ExpressionAttributeValues: {
-            ':todo_name' : updatedTodo.name,
-            ':done' : updatedTodo.done,
-            ':due_date' : updatedTodo.dueDate
+            ':document_name' : updatedDocument.name,
+            ':done' : updatedDocument.done,
+            ':due_date' : updatedDocument.dueDate
         },
         ReturnValues : 'NONE',
     
@@ -58,21 +58,21 @@ export async function updateTodo(todoId: string, updatedTodo:UpdateTodoRequest) 
 
 
 
-export function getUploadUrl(todoId: string) {
+export function getUploadUrl(documentId: string) {
     return s3.getSignedUrl('putObject', {
-      Bucket: process.env.ATTACHMENT_S3_BUCKET,
-      Key: todoId,
+      Bucket: process.env.DOCUMENT_S3_BUCKET,
+      Key: documentId,
       Expires: process.env.SIGNED_URL_EXPIRATION
     })
   }
 
-  export async function updateUploadUrl(todoId: string) {
+  export async function updateUploadUrl(documentId: string) {
       await docClient.update(  {
-        TableName: process.env.TODO_TABLE,
-        Key: {'todoId' : todoId},
-        UpdateExpression : 'set attachmentUrl = :attachment_url',
+        TableName: process.env.DOCUMENT_TABLE,
+        Key: {'documentId' : documentId},
+        UpdateExpression : 'set attachmentUrl = :DOCUMENT_URL',
         ExpressionAttributeValues: {
-            ':attachment_url' : process.env.ATTACHMENT_URL.concat(todoId)
+            ':DOCUMENT_URL' : process.env.DOCUMENT_URL.concat(documentId)
         },
         ReturnValues : 'NONE',
     

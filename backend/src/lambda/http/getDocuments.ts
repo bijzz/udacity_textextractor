@@ -1,9 +1,8 @@
 import 'source-map-support/register'
-import * as AWS  from 'aws-sdk'
 import { APIGatewayProxyEvent, APIGatewayProxyResult, APIGatewayProxyHandler } from 'aws-lambda'
 import { getUserId } from '../../auth/utils'
 import { createLogger } from '../../utils/logger'
-import { getTodo } from '../../service/persistance'
+import { getDocument } from '../../service/persistance'
 const logger = createLogger('getTodo')
 
 
@@ -17,7 +16,7 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
 
   let userId: string =  getUserId(jwtToken)
   
-  const result = await getTodo(userId)
+  const result = await getDocument(userId)
 
   logger.info("Fetched Todos", {userId: userId})
 

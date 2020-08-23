@@ -1,22 +1,19 @@
 import 'source-map-support/register'
-import * as AWS  from 'aws-sdk'
 import { APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult } from 'aws-lambda'
-import { UpdateTodoRequest } from '../../requests/UpdateTodoRequest'
+import { UpdateDocumentRequest } from '../../requests/UpdateDocumentRequest'
 import { createLogger } from '../../utils/logger'
-import { updateTodo } from '../../service/persistance'
+import { updateDocument } from '../../service/persistance'
 const logger = createLogger('updateTodo')
-
-const docClient = new AWS.DynamoDB.DocumentClient()
 
 
 export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-  const todoId = event.pathParameters.todoId
+  const documentId = event.pathParameters.documentId
   
-  const updatedTodo: UpdateTodoRequest = JSON.parse(event.body)
+  const updatedTodo: UpdateDocumentRequest = JSON.parse(event.body)
 
-  await updateTodo(todoId, updatedTodo)
+  await updateDocument(documentId, updatedTodo)
 
-  logger.info("Updated Todo", {todoId: todoId})
+  logger.info("Updated Todo", {documentId: documentId})
 
   return {
     statusCode: 201,
@@ -25,7 +22,7 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
       'Access-Control-Allow-Credentials': true
     },
     body: JSON.stringify({
-      "todoId": todoId,
+      "documentId": documentId,
       "description": "Item updated"
     })
   }

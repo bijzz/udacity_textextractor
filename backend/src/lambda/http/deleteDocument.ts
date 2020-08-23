@@ -1,15 +1,15 @@
 import 'source-map-support/register'
 import { APIGatewayProxyEvent, APIGatewayProxyResult, APIGatewayProxyHandler } from 'aws-lambda'
-import { deleteTodo } from '../../service/persistance'
+import { deleteDocument } from '../../service/persistance'
 import { createLogger } from '../../utils/logger'
 const logger = createLogger('deleteTodo')
 
 export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-  const todoId = event.pathParameters.todoId
+  const documentId = event.pathParameters.documentId
 
-  await deleteTodo(todoId)
+  await deleteDocument(documentId)
 
-  logger.info('Todo deleted', {todoId: todoId})
+  logger.info('Document deleted', {documentId: documentId})
 
   return {
     statusCode: 201,
@@ -18,7 +18,7 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
       'Access-Control-Allow-Credentials': true
     },
     body: JSON.stringify({
-      "todoId": todoId,
+      "documentId": documentId,
       "description": "Item deleted"
     })
 }

@@ -11,6 +11,7 @@
     "jsonwebtoken": "^8.5.1",
     "jwks-rsa": "^1.9.0",
     "middy": "^0.27.0",
+    "pdf-image": "^2.0.0",
     "source-map-support": "^0.5.11",
     "uuid": "^3.3.2",
     "winston": "^3.2.1"

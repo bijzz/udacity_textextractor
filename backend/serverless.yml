@@ -1,9 +1,9 @@
 service:
-  name: serverless-todo-app
+  name: serverless-ocr-app
 
 plugins:
-  - serverless-webpack
-  - serverless-iam-roles-per-function
+ - serverless-webpack
+ - serverless-iam-roles-per-function
 
 provider:
   name: aws
@@ -11,12 +11,11 @@ provider:
   stage: ${opt:stage, 'dev'} # default dev or passed by user
   region: ${opt:region, 'us-east-1'} # default us-east-1 or passed by user
 
-
   environment:
-    TODO_TABLE: todoapp-todo-${self:provider.stage}
-    TODO_TABLE_IDX_NAME : dueDateIndex
-    ATTACHMENT_S3_BUCKET: todoapp-attachment-${self:provider.stage}
-    ATTACHMENT_URL: https://${self:provider.environment.ATTACHMENT_S3_BUCKET}.s3.amazonaws.com/
+    DOCUMENT_TABLE: ocrapp-text-${self:provider.stage}
+    DOCUMENT_TABLE_IDX_NAME : dueDateIndex
+    DOCUMENT_S3_BUCKET: ocrapp-document-${self:provider.stage}
+    DOCUMENT_URL: https://${self:provider.environment.DOCUMENT_S3_BUCKET}.s3.amazonaws.com/
     AUTH_0_SECRET_ID: Auth0Secret-${self:provider.stage}
     AUTH_0_JWKS: https://dev-ev23cxso.eu.auth0.com/.well-known/jwks.json
     SIGNED_URL_EXPIRATION: 300
@@ -28,63 +27,80 @@ functions:
   Auth:
     handler: src/lambda/auth/auth0Authorizer.handler
 
+  CreatePreviewImage:
+    handler: src/lambda/http/createPreviewImage.handler
+    events:
+      - s3:
+        bucket: docBucket
+        event: s3:ObjectCreated:*
+        rules:
+          -suffix: .pdf
+    layers:
+      - arn:aws:lambda:us-east-1:464528236020:layer:image-magick:1
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - s3:PutObject
+          - s3:GetObject
+        Resource: arn:aws:s3:::${self:provider.environment.DOCUMENT_S3_BUCKET}/*
 
-  GetTodos:
-    handler: src/lambda/http/getTodos.handler
+
+  GetDocuments:
+    handler: src/lambda/http/getDocuments.handler
     events:
       - http:
           method: get
-          path: todos
+          path: documents
           cors: true
           authorizer: Auth
     iamRoleStatements:
       - Effect: Allow
         Action:
           - dynamodb:Query
-        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODO_TABLE}/index/${self:provider.environment.TODO_TABLE_IDX_NAME}
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.DOCUMENT_TABLE}/index/${self:provider.environment.DOCUMENT_TABLE_IDX_NAME}
 
-  CreateTodo:
-    handler: src/lambda/http/createTodo.handler
+  CreateDocument:
+    handler: src/lambda/http/createDocument.handler
     events:
       - http:
           method: post
-          path: todos
+          path: documents
           cors: true
           authorizer: Auth
     iamRoleStatements:
       - Effect: Allow
         Action:
           - dynamodb:PutItem
-        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODO_TABLE}
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.DOCUMENT_TABLE}
 
-  UpdateTodo:
-    handler: src/lambda/http/updateTodo.handler
+  UpdateDocument:
+    handler: src/lambda/http/updateDocument.handler
     events:
       - http:
           method: patch
           # placeholders {} are sent to the event.pathParameters
-          path: todos/{todoId}
+          path: documents/{documentId}
           cors: true
           authorizer: Auth
     iamRoleStatements:
       - Effect: Allow
         Action:
           - dynamodb:UpdateItem
-        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODO_TABLE}
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.DOCUMENT_TABLE}
 
-  DeleteTodo:
-    handler: src/lambda/http/deleteTodo.handler
+  DeleteDocument:
+    handler: src/lambda/http/deleteDocument.handler
     events:
       - http:
           method: delete
-          path: todos/{todoId}
+          path: documents/{documentId}
           cors: true
           authorizer: Auth
     iamRoleStatements:
       - Effect: Allow
         Action:
           - dynamodb:DeleteItem
-        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODO_TABLE}
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.DOCUMENT_TABLE}
 
 
   GenerateUploadUrl:
@@ -92,18 +108,18 @@ functions:
     events:
       - http:
           method: post
-          path: todos/{todoId}/attachment
+          path: documents/{documentId}/attachment
           cors: true
           authorizer: Auth
     iamRoleStatements:
       - Effect: Allow
         Action:
           - s3:PutObject
-        Resource: arn:aws:s3:::${self:provider.environment.ATTACHMENT_S3_BUCKET}/*
+        Resource: arn:aws:s3:::${self:provider.environment.DOCUMENT_S3_BUCKET}/*
       - Effect: Allow
         Action:
           - dynamodb:UpdateItem
-        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODO_TABLE}
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.DOCUMENT_TABLE}
 
 resources:
   Resources:
@@ -114,35 +130,35 @@ resources:
         AttributeDefinitions:
           # only specify keys
           # non-key attributes are not required (due to schmealess nature)
-          - AttributeName: todoId
+          - AttributeName: documentId
             AttributeType: S # string type
           - AttributeName: userId
             AttributeType: S # string type
         KeySchema:
           # composite key ( both together uniquely identify an item)
-          - AttributeName: todoId 
+          - AttributeName: documentId 
             KeyType: HASH # partitionKey : what partition to write item to
        #   - AttributeName: createdAt 
        #     KeyType: RANGE # sortKey : to sort elements with the same partition key
         BillingMode: PAY_PER_REQUEST
-        TableName: ${self:provider.environment.TODO_TABLE}
+        TableName: ${self:provider.environment.DOCUMENT_TABLE}
         # LocalSecondaryIndexes (LSI): Like an additional sort key
         # GlobalSecondaryIndexes (GSI) : Creates a copy with another partition / sort key
         GlobalSecondaryIndexes:
-          - IndexName: ${self:provider.environment.TODO_TABLE_IDX_NAME}
+          - IndexName: ${self:provider.environment.DOCUMENT_TABLE_IDX_NAME}
             KeySchema:
               - AttributeName: userId
                 KeyType: HASH
             Projection:
               ProjectionType: ALL # What attributes will be copied to an index
 
-    AttachmentBucket:
+    S3BucketDocBucket:
       Type: AWS::S3::Bucket
       Properties:
-        BucketName: ${self:provider.environment.ATTACHMENT_S3_BUCKET}
+        BucketName: ${self:provider.environment.DOCUMENT_S3_BUCKET}
         CorsConfiguration:
           CorsRules:
-            -
+            - 
               AllowedOrigins:
                 - '*'
               AllowedHeaders:
@@ -154,17 +170,19 @@ resources:
                 - DELETE
                 - HEAD
               MaxAge: 3000
- 
+
     BucketPolicy:
-        Type: AWS::S3::BucketPolicy
-        Properties:
-          PolicyDocument:
-            Id: MyPolicy
-            Version: "2012-10-17"
-            Statement:
-              - Sid: PublicReadForGetBucketObjects
-                Effect: Allow
-                Principal: '*'
-                Action: 's3:GetObject'
-                Resource: 'arn:aws:s3:::${self:provider.environment.ATTACHMENT_S3_BUCKET}/*'
-          Bucket: !Ref AttachmentBucket
+      Type: AWS::S3::BucketPolicy
+      Properties:
+        PolicyDocument:
+          Id: MyPolicy
+          Version: "2012-10-17"
+          Statement:
+            - Sid: PublicReadWriteBucketPolicy
+              Effect: Allow
+              Principal: '*'
+              Action:
+                - s3:GetObject
+                - s3:PutObject
+              Resource: 'arn:aws:s3:::${self:provider.environment.DOCUMENT_S3_BUCKET}/*'
+        Bucket: !Ref S3BucketDocBucket

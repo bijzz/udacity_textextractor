@@ -7,11 +7,12 @@ const logger = createLogger('uploadUrl')
 
 
 export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-  const todoId = event.pathParameters.todoId
+  const documentId = event.pathParameters.documentId
 
-  const url = getUploadUrl(todoId)
+  const url = getUploadUrl(documentId)
 
-  await updateUploadUrl(todoId)
+
+  await updateUploadUrl(documentId)
 
   logger.debug("Presigned URL fetched",{presignedUrl: url})
 

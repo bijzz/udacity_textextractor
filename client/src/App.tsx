@@ -41,6 +41,7 @@ export default class App extends Component<AppProps, AppState> {
             <Grid.Row>
               <Grid.Column width={16}>
                 <Router history={this.props.history}>
+                  {this.generateTitle()}
                   {this.generateMenu()}
 
                   {this.generateCurrentPage()}
@@ -53,11 +54,19 @@ export default class App extends Component<AppProps, AppState> {
     )
   }
 
+  generateTitle() {
+    return(
+      <div><h1>Document Text Extractor (OCR)</h1>
+      <h3>via Amazon's <a href="https://aws.amazon.com/de/textract/">Textract</a></h3></div>
+    )
+  }
+
   generateMenu() {
     return (
       <Menu>
-        <Menu.Item name="home">
-          <Link to="/">Home</Link>
+        {/* <Menu.Item name="home" component={Link} to="/" > */}
+        <Menu.Item name="home" >
+           <Link to="/">Home</Link> 
         </Menu.Item>
 
         <Menu.Menu position="right">{this.logInLogOutButton()}</Menu.Menu>
