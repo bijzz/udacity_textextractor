@@ -3,9 +3,9 @@ import * as AWS  from 'aws-sdk'
 import { APIGatewayProxyEvent, APIGatewayProxyResult, APIGatewayProxyHandler } from 'aws-lambda'
 import { getUserId } from '../../auth/utils'
 import { createLogger } from '../../utils/logger'
+import { getTodo } from '../../service/persistance'
 const logger = createLogger('getTodo')
 
-const docClient = new AWS.DynamoDB.DocumentClient()
 
 export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
 
@@ -16,19 +16,10 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
   const jwtToken = split[1]
 
   let userId: string =  getUserId(jwtToken)
+  
+  const result = await getTodo(userId)
 
-  // get via hashkey / better for bulk retrival
-  // query have filter extensions servers-side
-  const result = await docClient.query({
-    TableName : process.env.TODO_TABLE,
-    IndexName : process.env.TODO_TABLE_IDX_NAME,
-    KeyConditionExpression: 'userId = :userId', // :value's are specified below in the ExpressionAttributeValues
-    ExpressionAttributeValues: {
-        ':userId': userId
-    }
-}).promise()
-
-logger.info("Fetched Todos", {userId: userId})
+  logger.info("Fetched Todos", {userId: userId})
 
   return {
     statusCode: 200,
