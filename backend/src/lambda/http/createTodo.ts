@@ -3,12 +3,11 @@ import * as uuid from 'uuid'
 import { APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult } from 'aws-lambda'
 import { CreateTodoRequest } from '../../requests/CreateTodoRequest'
 import { TodoItem  } from '../../models/TodoItem'
-import * as AWS  from 'aws-sdk'
 import { getUserId } from '../../auth/utils'
 import { createLogger } from '../../utils/logger'
+import { persistTodo } from '../../service/persistance'
 const logger = createLogger('createTodo')
 
-const docClient = new AWS.DynamoDB.DocumentClient()
 
 export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   const newTodoRequest: CreateTodoRequest = JSON.parse(event.body)
@@ -30,11 +29,8 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
   done: false // attachment url empty?
   }
 
+  await persistTodo(newToDoItem)
 
-  await docClient.put({
-    TableName: process.env.TODO_TABLE,
-    Item: newToDoItem
-  }).promise()
 
   logger.info('New todo created', {newToDoItem})
     

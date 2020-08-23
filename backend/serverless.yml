@@ -22,23 +22,6 @@ provider:
     SIGNED_URL_EXPIRATION: 300
   # permissions set here would be active for all functions
   # iamRoleStatements:
-  #   - Effect: Allow
-  #     Action:
-  #       - s3:PutObject
-  #       - s3:GetObject
-  #     Resource: arn:aws:s3:::${self:provider.environment.ATTACHMENT_S3_BUCKET}/*
-  #   - Effect: Allow
-  #     Action:
-  #       - dynamodb:Scan
-  #       - dynamodb:PutItem
-  #       - dynamodb:UpdateItem
-  #       - dynamodb:GetItem
-  #       - dynamodb:DeleteItem
-  #     Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODO_TABLE}
-  #   - Effect: Allow
-  #     Action:
-  #       - dynamodb:Query
-  #     Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODO_TABLE}/index/${self:provider.environment.TODO_TABLE_IDX_NAME}
 
 functions:
 
