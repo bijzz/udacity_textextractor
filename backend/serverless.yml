@@ -29,12 +29,6 @@ functions:
 
   CreatePreviewImage:
     handler: src/lambda/http/createPreviewImage.handler
-    events:
-      - s3:
-        bucket: docBucket
-        event: s3:ObjectCreated:*
-        rules:
-          -suffix: .pdf
     layers:
       - arn:aws:lambda:us-east-1:464528236020:layer:image-magick:1
     iamRoleStatements:
@@ -43,6 +37,13 @@ functions:
           - s3:PutObject
           - s3:GetObject
         Resource: arn:aws:s3:::${self:provider.environment.DOCUMENT_S3_BUCKET}/*
+    events:
+      - s3: 
+          bucket: docbucket
+          event: s3:ObjectCreated:*
+          rules:
+            - suffix: .pdf
+
 
 
   GetDocuments:
@@ -152,7 +153,7 @@ resources:
             Projection:
               ProjectionType: ALL # What attributes will be copied to an index
 
-    S3BucketDocBucket:
+    S3BucketDocbucket:
       Type: AWS::S3::Bucket
       Properties:
         BucketName: ${self:provider.environment.DOCUMENT_S3_BUCKET}
@@ -185,4 +186,4 @@ resources:
                 - s3:GetObject
                 - s3:PutObject
               Resource: 'arn:aws:s3:::${self:provider.environment.DOCUMENT_S3_BUCKET}/*'
-        Bucket: !Ref S3BucketDocBucket
+        Bucket: !Ref S3BucketDocbucket
