@@ -37,12 +37,13 @@ functions:
           - s3:PutObject
           - s3:GetObject
         Resource: arn:aws:s3:::${self:provider.environment.DOCUMENT_S3_BUCKET}/*
-    events:
-      - s3: 
-          bucket: docbucket
-          event: s3:ObjectCreated:*
-          rules:
-            - suffix: .pdf
+    # the following is done in an alternative fashion due to various errors
+    # events:
+    #   - s3: 
+    #       bucket: docbucket
+    #       event: s3:ObjectCreated:*
+    #       rules:
+    #         - suffix: .pdf
 
 
 
@@ -157,6 +158,10 @@ resources:
       Type: AWS::S3::Bucket
       Properties:
         BucketName: ${self:provider.environment.DOCUMENT_S3_BUCKET}
+        NotificationConfiguration:
+          LambdaConfigurations:
+            - Event: s3:ObjectCreated:*
+              Function: !GetAtt CreatePreviewImageLambdaFunction.Arn
         CorsConfiguration:
           CorsRules:
             - 
@@ -187,3 +192,12 @@ resources:
                 - s3:PutObject
               Resource: 'arn:aws:s3:::${self:provider.environment.DOCUMENT_S3_BUCKET}/*'
         Bucket: !Ref S3BucketDocbucket
+
+    CreatePreviewImagePermission:
+      Type: AWS::Lambda::Permission
+      Properties:
+        FunctionName: !Ref CreatePreviewImageLambdaFunction
+        Principal: s3.amazonaws.com
+        Action: lambda:InvokeFunction
+        SourceAccount: !Ref AWS::AccountId
+        SourceArn: arn:aws:s3:::${self:provider.environment.DOCUMENT_S3_BUCKET}
