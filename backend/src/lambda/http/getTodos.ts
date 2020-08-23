@@ -2,6 +2,8 @@ import 'source-map-support/register'
 import * as AWS  from 'aws-sdk'
 import { APIGatewayProxyEvent, APIGatewayProxyResult, APIGatewayProxyHandler } from 'aws-lambda'
 import { getUserId } from '../../auth/utils'
+import { createLogger } from '../../utils/logger'
+const logger = createLogger('getTodo')
 
 const docClient = new AWS.DynamoDB.DocumentClient()
 
@@ -25,6 +27,8 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
         ':userId': userId
     }
 }).promise()
+
+logger.info("Fetched Todos", {userId: userId})
 
   return {
     statusCode: 200,

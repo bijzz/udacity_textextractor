@@ -2,10 +2,10 @@ import 'source-map-support/register'
 import * as uuid from 'uuid'
 import { APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult } from 'aws-lambda'
 import { CreateTodoRequest } from '../../requests/CreateTodoRequest'
-import { createLogger } from '../../utils/logger'
 import { TodoItem  } from '../../models/TodoItem'
 import * as AWS  from 'aws-sdk'
 import { getUserId } from '../../auth/utils'
+import { createLogger } from '../../utils/logger'
 const logger = createLogger('createTodo')
 
 const docClient = new AWS.DynamoDB.DocumentClient()
@@ -36,7 +36,7 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
     Item: newToDoItem
   }).promise()
 
-  logger.info('New todo to create', {newToDoItem})
+  logger.info('New todo created', {newToDoItem})
     
     return {
       statusCode: 201,

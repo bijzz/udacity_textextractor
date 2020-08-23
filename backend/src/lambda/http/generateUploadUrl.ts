@@ -1,7 +1,8 @@
 import 'source-map-support/register'
 import * as AWS  from 'aws-sdk'
 import { APIGatewayProxyEvent, APIGatewayProxyResult, APIGatewayProxyHandler } from 'aws-lambda'
-
+import { createLogger } from '../../utils/logger'
+const logger = createLogger('uploadUrl')
 
 const s3 = new AWS.S3({
   signatureVersion: 'v4'
@@ -23,6 +24,8 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
     ReturnValues : 'NONE',
 
   }).promise()
+
+  logger.debug("Presigned URL fetched",{presignedUrl: url})
 
   return {
     statusCode: 201,
