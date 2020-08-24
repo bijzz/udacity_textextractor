@@ -56,14 +56,23 @@ export default class App extends Component<AppProps, AppState> {
 
   generateTitle() {
     return(
-      <div><h1>Document Text Extractor (OCR)</h1>
-      <h3>via Amazon's <a href="https://aws.amazon.com/de/textract/">Textract</a></h3></div>
+      <div style={{ width:'100%', display: 'block', paddingBottom:'150px'}}>
+        <div style={{float:'left'}}>
+         <h1>Document Text Extractor</h1>
+         <h3>aka Optical Character Recognition<br />via Amazon's<a href="https://aws.amazon.com/de/textract/" target="_blank">Textract</a></h3>
+        </div>
+        <div style={{float:'right', textAlign:'right'}}>
+          <img style={{display:'block'}} src={require('./aws.png')} className="icon" />
+          ...powered by
+        </div>
+      </div>
+
     )
   }
 
   generateMenu() {
     return (
-      <Menu>
+      <Menu style={{clear:'left'}}>
         {/* <Menu.Item name="home" component={Link} to="/" > */}
         <Menu.Item name="home" >
            <Link to="/">Home</Link> 
@@ -106,7 +115,7 @@ export default class App extends Component<AppProps, AppState> {
         />
 
         <Route
-          path="/todos/:todoId/edit"
+          path="/todos/:documentId/edit"
           exact
           render={props => {
             return <EditTodo {...props} auth={this.props.auth} />

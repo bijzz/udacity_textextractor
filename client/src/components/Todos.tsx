@@ -1,6 +1,8 @@
 import dateFormat from 'dateformat'
 import { History } from 'history'
 import update from 'immutability-helper'
+import { MdCloudUpload, MdDelete } from 'react-icons/md';
+import { FaTrash, FaUpload, FaDownload } from 'react-icons/fa';
 import * as React from 'react'
 import {
   Button,
@@ -40,8 +42,8 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
     this.setState({ newTodoName: event.target.value })
   }
 
-  onEditButtonClick = (todoId: string) => {
-    this.props.history.push(`/todos/${todoId}/edit`)
+  onEditButtonClick = (documentId: string) => {
+    this.props.history.push(`/todos/${documentId}/edit`)
   }
 
   onTodoCreate = async (event: React.ChangeEvent<HTMLButtonElement>) => {
@@ -56,25 +58,25 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
         newTodoName: ''
       })
     } catch {
-      alert('Todo creation failed')
+      alert('Document creation failed')
     }
   }
 
-  onTodoDelete = async (todoId: string) => {
+  onTodoDelete = async (documentId: string) => {
     try {
-      await deleteDocument(this.props.auth.getIdToken(), todoId)
+      await deleteDocument(this.props.auth.getIdToken(), documentId)
       this.setState({
-        todos: this.state.todos.filter(todo => todo.todoId != todoId)
+        todos: this.state.todos.filter(todo => todo.documentId != documentId)
       })
     } catch {
-      alert('Todo deletion failed')
+      alert('Document deletion failed')
     }
   }
 
   onTodoCheck = async (pos: number) => {
     try {
       const todo = this.state.todos[pos]
-      await patchDocument(this.props.auth.getIdToken(), todo.todoId, {
+      await patchDocument(this.props.auth.getIdToken(), todo.documentId, {
         name: todo.name,
         dueDate: todo.dueDate,
         done: !todo.done
@@ -85,7 +87,7 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
         })
       })
     } catch {
-      alert('Todo deletion failed')
+      alert('Document deletion failed')
     }
   }
 
@@ -97,7 +99,7 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
         loadingTodos: false
       })
     } catch (e) {
-      alert(`Failed to fetch todos: ${e.message}`)
+      alert(`Document to fetch todos: ${e.message}`)
     }
   }
 
@@ -150,7 +152,7 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
     return (
       <Grid.Row>
         <Loader indeterminate active inline="centered">
-          Loading TODOs
+          Loading Documents
         </Loader>
       </Grid.Row>
     )
@@ -161,43 +163,51 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
       <Grid padded>
         {this.state.todos.map((todo, pos) => {
           return (
-            <Grid.Row key={todo.todoId}>
-              <Grid.Column width={1} verticalAlign="middle">
+            <Grid.Row key={todo.documentId}>
+              {/* <Grid.Column width={1} verticalAlign="middle">
                 <Checkbox
                   onChange={() => this.onTodoCheck(pos)}
                   checked={todo.done}
                 />
+              </Grid.Column> */}
+              <Grid.Column width={1} >
+              {todo.attachmentUrl && (
+                <div>
+                  <Button>
+                <a href={todo.attachmentUrl} target="_blank"><FaDownload/></a>
+                </Button>
+                </div>
+              )}
               </Grid.Column>
-              <Grid.Column width={10} verticalAlign="middle">
+              <Grid.Column width={10}>
                 {todo.name}
               </Grid.Column>
               <Grid.Column width={3} floated="right">
-                {todo.dueDate}
+                {todo.ocr}
               </Grid.Column>
               <Grid.Column width={1} floated="right">
                 <Button
                   icon
                   color="blue"
-                  onClick={() => this.onEditButtonClick(todo.todoId)}
+                  onClick={() => this.onEditButtonClick(todo.documentId)}
                 >
-                  <Icon name="pencil" />
+                  <FaUpload />
                 </Button>
               </Grid.Column>
               <Grid.Column width={1} floated="right">
                 <Button
                   icon
                   color="red"
-                  onClick={() => this.onTodoDelete(todo.todoId)}
+                  onClick={() => this.onTodoDelete(todo.documentId)}
                 >
-                  <Icon name="delete" />
+                  <FaTrash/>
+                 
+                  
                 </Button>
               </Grid.Column>
-              {todo.attachmentUrl && (
-                <Image src={todo.attachmentUrl} size="small" wrapped />
-              )}
-              <Grid.Column width={16}>
+              {/* <Grid.Column width={16}>
                 <Divider />
-              </Grid.Column>
+              </Grid.Column> */}
             </Grid.Row>
           )
         })}

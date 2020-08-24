@@ -12,7 +12,7 @@ enum UploadState {
 interface EditTodoProps {
   match: {
     params: {
-      todoId: string
+      documentId: string
     }
   }
   auth: Auth
@@ -51,12 +51,12 @@ export class EditTodo extends React.PureComponent<
       }
 
       this.setUploadState(UploadState.FetchingPresignedUrl)
-      const uploadUrl = await getUploadUrl(this.props.auth.getIdToken(), this.props.match.params.todoId)
+      const uploadUrl = await getUploadUrl(this.props.auth.getIdToken(), this.props.match.params.documentId)
 
       this.setUploadState(UploadState.UploadingFile)
       await uploadFile(uploadUrl, this.state.file)
 
-      alert('File was uploaded!')
+      alert('Document was uploaded!')
     } catch (e) {
       alert('Could not upload a file: ' + e.message)
     } finally {

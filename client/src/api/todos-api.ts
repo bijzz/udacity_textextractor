@@ -32,10 +32,10 @@ export async function createDocument(
 
 export async function patchDocument(
   idToken: string,
-  todoId: string,
+  documentId: string,
   updatedTodo: UpdateTodoRequest
 ): Promise<void> {
-  await Axios.patch(`${apiEndpoint}/documents/${todoId}`, JSON.stringify(updatedTodo), {
+  await Axios.patch(`${apiEndpoint}/documents/${documentId}`, JSON.stringify(updatedTodo), {
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${idToken}`
@@ -45,9 +45,9 @@ export async function patchDocument(
 
 export async function deleteDocument(
   idToken: string,
-  todoId: string
+  documentId: string
 ): Promise<void> {
-  await Axios.delete(`${apiEndpoint}/documents/${todoId}`, {
+  await Axios.delete(`${apiEndpoint}/documents/${documentId}`, {
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${idToken}`
@@ -57,9 +57,9 @@ export async function deleteDocument(
 
 export async function getUploadUrl(
   idToken: string,
-  todoId: string
+  documentId: string
 ): Promise<string> {
-  const response = await Axios.post(`${apiEndpoint}/documents/${todoId}/attachment`, '', {
+  const response = await Axios.post(`${apiEndpoint}/documents/${documentId}/attachment`, '', {
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${idToken}`

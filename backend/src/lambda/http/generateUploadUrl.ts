@@ -10,11 +10,12 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
   const documentId = event.pathParameters.documentId
 
   const url = getUploadUrl(documentId)
-
+  
+  logger.info("Presigned URL fetched",{presignedUrl: url})
 
   await updateUploadUrl(documentId)
 
-  logger.debug("Presigned URL fetched",{presignedUrl: url})
+  logger.info("Updated database entry with attachment url ")
 
   return {
     statusCode: 201,

@@ -12,3 +12,11 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+.icon {
+  height: 50px;
+}
+
+.downlod_icon {
+  height: 30px;
+}

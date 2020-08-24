@@ -1,7 +1,8 @@
 export interface Todo {
-  todoId: string
+  documentId: string
   createdAt: string
   name: string
+  ocr:string
   dueDate: string
   done: boolean
   attachmentUrl?: string

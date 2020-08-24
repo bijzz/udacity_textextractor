@@ -20,7 +20,7 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
   const documentId = uuid.v4()
   let userId: string =  getUserId(jwtToken)
 
-  const newToDoItem : DocumentItem = {
+  const newDocumentItem : DocumentItem = {
   documentId: documentId,
   userId: userId,
   createdAt: new Date().toISOString(),
@@ -29,10 +29,10 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
   done: false // attachment url empty?
   }
 
-  await persistDocument(newToDoItem)
+  await persistDocument(newDocumentItem)
 
 
-  logger.info('New todo created', {newToDoItem})
+  logger.info('New document created', {newDocumentItem})
     
     return {
       statusCode: 201,
@@ -41,7 +41,7 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
         'Access-Control-Allow-Credentials': true
       },
       body: JSON.stringify({
-        "item": newToDoItem
+        "item": newDocumentItem
       })
   }
 }

@@ -8,7 +8,7 @@ export const handler: S3Handler = async (events: S3Event) => {
     //const a = events
     for (const record of events.Records) {
         const key = record.s3.object.key
-        logger.info("Processing S3 item ", key)
+        logger.info("Processing S3 item ", {key:key})
     }
     return 
 }
