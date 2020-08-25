@@ -179,10 +179,15 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
                 </div>
               )}
               </Grid.Column>
-              <Grid.Column width={10}>
-                {todo.name}
+              <Grid.Column width={3} >
+              {todo.attachmentUrl && (
+                <Image src={todo.attachmentUrl.concat("-preview")}  />
+              )}
               </Grid.Column>
-              <Grid.Column width={3} floated="right">
+              <Grid.Column width={3}>
+                <b>{todo.name}</b>
+              </Grid.Column>
+              <Grid.Column width={1} floated="right">
                 {todo.ocr}
               </Grid.Column>
               <Grid.Column width={1} floated="right">

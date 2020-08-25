@@ -7,13 +7,79 @@ const s3 = new AWS.S3({
   })
 import { createLogger } from '../utils/logger'
 const logger = createLogger('persistance')
-    
+var fs = require('fs')
+, gm = require('gm').subClass({imageMagick: true});
+var request = require('request-promise')
+
 export async function persistDocument(newDocumentItem: DocumentItem) {
     logger.info("persistDocument", {newDocumentItem})
     return await docClient.put({
         TableName: process.env.DOCUMENT_TABLE,
         Item: newDocumentItem
     }).promise()
+}
+
+function createPreviewImage(localPdfPath:string) {
+    return new Promise((resolve, reject) => {
+    gm(localPdfPath.concat("[0]")) // [0]
+    .thumb(
+        200, // width
+        200, // height
+        process.env.TMP_FILE_PATH, // output file 
+        80, // quality [0,100]
+        (error, stdout, stderr, command) => {
+            if (!error) {
+            resolve(stdout)
+            } else {
+            logger.info("ImageMick conversion of PDF failed")
+            logger.info(command)
+            logger.info(stdout)
+            logger.info(stderr)
+            logger.info(error)
+            reject(stderr)
+            }
+        }
+    )
+  })
+}
+
+export async function createAndPersistPreviewImage(key: string) {
+    
+    // see https://gist.github.com/jamilnyc/71bb717c95835bcc1d848b5158e90abb
+    const url = process.env.DOCUMENT_URL.concat(key)
+    logger.info("Create preview image from s3 file", {s3:url})
+
+    const options = {
+        url: url,
+        encoding: null
+      }
+
+    const localPdfPath = process.env.TMP_FILE_PATH.concat(".pdf")
+    const localPngPath = process.env.TMP_FILE_PATH
+
+    const result = await request.get(options)
+    const pdfBuffer = Buffer.from(result, 'utf8')
+    fs.writeFileSync(localPdfPath, pdfBuffer)
+    logger.info("Written S3 file to local storage", {path:localPdfPath})
+    const gmResult = await createPreviewImage(localPdfPath)
+    logger.info("GM finished", {result: gmResult})
+
+    const newKey =  key.concat('-preview')
+    logger.info("Perist preview image in s3 with new key ", {s3key: newKey})
+    const pngBuffer = fs.readFileSync(localPngPath)
+    const destparams = {
+        Bucket: process.env.DOCUMENT_S3_BUCKET,
+        Key: newKey,
+        Body: pngBuffer,
+        ContentType: "image"
+    }
+
+    await s3.putObject(destparams).promise()
+
+    fs.unlinkSync(localPngPath)
+    fs.unlinkSync(localPdfPath)
+
+    return 
 }
 
 export async function deleteDocument(documentId: string) {
