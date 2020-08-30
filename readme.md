@@ -55,7 +55,7 @@ The layer can afterwards be used by serverless by selecting the deployed arn wit
 
 The application makes use of layers to add  [ghostscript](https://github.com/shelfio/ghostscript-lambda-layer) and [imagemick](https://github.com/serverlesspub/imagemagick-aws-lambda-2) layers which is required for the npm package [gm](https://aheckmann.github.io/gm/) of GraphicsMagick that we use for creating a preview image of a pdf file. 
 
-Upon a File Upload a S3 Event is linked to a LambdaFunction which creates the preview Image as well as triggers a asynchronous text extraction via [Amazon Textract](https://aws.amazon.com/de/textract/). If the text extraction is finished it pushes a notification to an SNS topic. This topic is read from a Lambda function that upon notification then triggers the persistance of the text extraction result into the backend (here DynamoDB).
+Upon a File Upload a S3 Event is linked to a LambdaFunction which creates the preview image as well as triggers a asynchronous text extraction via [Amazon Textract](https://aws.amazon.com/de/textract/). If the text extraction is finished it pushes a notification to an SNS topic. This topic is read from a Lambda function that upon notification triggers the persistance of the text extraction result into the backend (here DynamoDB).
 
 ### Backend
 
