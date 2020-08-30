@@ -1,5 +1,7 @@
 # Capstone - Text extractor
 
+![](docs/2020-08-30-23-33-16-image.png)
+
 ## Introduction
 
 This application allows to upload documents (pdf) and extract its content as raw text. It features:
@@ -19,7 +21,9 @@ The sample document `dummy.pdf` we will upload looks like:
 
 ![](docs/2020-08-30-23-06-31-image.png)
 
-Afterwards we can return to `Home` . Due to the asynchronous processing in the background one might need to refresh / relogin to the webpage to view the result of the processing. After a while it will look like:
+Afterwards we can return to `Home` .
+
+**Note**: Due to the asynchronous processing in the background one might need to refresh / relogin to the webpage to view the result of the processing. After a while it will look like:
 
 ![](docs/2020-08-30-23-09-41-image.png)
 
