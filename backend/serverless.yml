@@ -50,33 +50,6 @@ functions:
     role: TextractRole
 
 
-    # Policies:
-    #   - AWSLambdaExecute
-    #   - Statement:
-    #       - Effect: Allow
-    #         Action:
-    #           - "s3:PutObject"
-    #           - "s3:GetObject"
-    #         Resource: rn:aws:s3:::${self:provider.environment.DOCUMENT_S3_BUCKET}/*
-    # iamRoleStatements:
-    #   - Effect: Allow
-    #     Action:
-    #       - s3:PutObject
-    #       - s3:GetObject
-    #     Resource: arn:aws:s3:::${self:provider.environment.DOCUMENT_S3_BUCKET}/*
-      # - Effect: Allow
-      #   Action:
-      #     - "textract:*"
-      #   Resource: "*"
-    # the following is done in an alternative fashion due to various errors
-    # events:
-    #   - s3: 
-    #       bucket: S3BucketDocbucket
-    #       event: s3:ObjectCreated:*
-    #       rules:
-    #         - suffix: .pdf
-    #       existing: true
-
   storeOcrResult:
     handler: src/lambda/http/storeOcrResult.handler
     events:
@@ -295,12 +268,3 @@ resources:
                   Action:
                     - dynamodb:UpdateItem
                   Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.DOCUMENT_TABLE}
-          # - PolicyName: "S3Access"
-          #   PolicyDocument:
-          #     Version: "2012-10-17"
-          #     Statement:
-          #       - Effect: Allow
-          #         Action:
-          #           - "s3:PutObject"
-          #           - "s3:GetObject"
-          #         Resource: rn:aws:s3:::${self:provider.environment.DOCUMENT_S3_BUCKET}/*
