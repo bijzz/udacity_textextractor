@@ -1,21 +1,12 @@
 import 'source-map-support/register'
 import { APIGatewayProxyEvent, APIGatewayProxyResult, APIGatewayProxyHandler } from 'aws-lambda'
-import { createLogger } from '../../utils/logger'
-import { getUploadUrl, updateUploadUrl } from '../../service/persistance'
-const logger = createLogger('uploadUrl')
-
+import { fetchUploadUrl } from '../../businessLayer/documents'
 
 
 export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   const documentId = event.pathParameters.documentId
 
-  const url = getUploadUrl(documentId)
-  
-  logger.info("Presigned URL fetched",{presignedUrl: url})
-
-  await updateUploadUrl(documentId)
-
-  logger.info("Updated database entry with attachment url ")
+  const url = fetchUploadUrl(documentId)
 
   return {
     statusCode: 201,

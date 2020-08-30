@@ -185,7 +185,7 @@ export async function createAndPersistImage(key: string) {
     return 
 }
 
-export async function deleteDocument(documentId: string) {
+export async function removeDocument(documentId: string) {
     logger.info("deleteDocument", {documentId})
     return await docClient.delete({
         TableName: process.env.DOCUMENT_TABLE,

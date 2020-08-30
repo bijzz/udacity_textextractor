@@ -1,6 +1,6 @@
 import 'source-map-support/register'
 import { APIGatewayProxyEvent, APIGatewayProxyResult, APIGatewayProxyHandler } from 'aws-lambda'
-import { deleteDocument } from '../../service/persistance'
+import { deleteDocument } from '../../businessLayer/documents'
 import { createLogger } from '../../utils/logger'
 const logger = createLogger('deleteTodo')
 
@@ -9,7 +9,6 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
 
   await deleteDocument(documentId)
 
-  logger.info('Document deleted', {documentId: documentId})
 
   return {
     statusCode: 201,

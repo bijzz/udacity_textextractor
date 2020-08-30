@@ -2,7 +2,7 @@ import 'source-map-support/register'
 import { APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult } from 'aws-lambda'
 import { UpdateDocumentRequest } from '../../requests/UpdateDocumentRequest'
 import { createLogger } from '../../utils/logger'
-import { updateDocument } from '../../service/persistance'
+import { updateDocument } from '../../dataLayer/persistance'
 const logger = createLogger('updateTodo')
 
 
