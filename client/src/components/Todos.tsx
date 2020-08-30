@@ -13,7 +13,8 @@ import {
   Icon,
   Input,
   Image,
-  Loader
+  Loader,
+  TextArea
 } from 'semantic-ui-react'
 
 import { createDocument, deleteDocument, getDocuments, patchDocument } from '../api/todos-api'
@@ -188,7 +189,13 @@ export class Todos extends React.PureComponent<TodosProps, TodosState> {
                 <b>{todo.name}</b>
               </Grid.Column>
               <Grid.Column width={1} floated="right">
-                {todo.ocr}
+              <TextArea
+                id="first-name"
+                label="Name"
+                value= {todo.textract}
+                margin="normal"
+              />
+               
               </Grid.Column>
               <Grid.Column width={1} floated="right">
                 <Button

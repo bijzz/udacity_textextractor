@@ -14,12 +14,26 @@ provider:
   environment:
     DOCUMENT_TABLE: ocrapp-text-${self:provider.stage}
     DOCUMENT_TABLE_IDX_NAME : dueDateIndex
-    DOCUMENT_S3_BUCKET: ocrapp-document-${self:provider.stage}
+    DOCUMENT_S3_BUCKET: ocrapp-s3-document-${self:provider.stage}
     DOCUMENT_URL: https://${self:provider.environment.DOCUMENT_S3_BUCKET}.s3.amazonaws.com/
     AUTH_0_SECRET_ID: Auth0Secret-${self:provider.stage}
     AUTH_0_JWKS: https://dev-ev23cxso.eu.auth0.com/.well-known/jwks.json
-    TMP_FILE_PATH: /tmp/thumbnail.png
     SIGNED_URL_EXPIRATION: 300
+    TMP_FILE_PATH_PDF: /tmp/ocr_sample.pdf
+    TMP_FILE_PATH_PREVIEW: /tmp/img_preview.png
+    IMG_PREVIEW_SUFFIX : '-preview'
+    # TMP_FILE_PATH_FULL: /tmp/img_full.png # optional
+    # IMG_FULL_SUFFIX: '-full' # optional
+    OCR_SNS_TOPIC: ocrsnstopic-${self:provider.stage}
+    OCR_SNS_TOPIC_ARN:
+      Fn::Join:
+      - ":"
+      - - "arn:aws:sns"
+        - Ref: "AWS::Region"
+        - Ref: "AWS::AccountId"
+        - ${self:provider.environment.OCR_SNS_TOPIC}
+    TEXTRACT_ROLE: !GetAtt TextractRole.Arn
+    
   # permissions set here would be active for all functions
   # iamRoleStatements:
 
@@ -31,21 +45,51 @@ functions:
   CreatePreviewImage:
     handler: src/lambda/http/createPreviewImage.handler
     layers:
-      - arn:aws:lambda:us-east-1:464528236020:layer:image-magick:1
+      - arn:aws:lambda:us-east-1:744752568456:layer:image-magick:1
       - arn:aws:lambda:us-east-1:764866452798:layer:ghostscript:8
-    iamRoleStatements:
-      - Effect: Allow
-        Action:
-          - s3:PutObject
-          - s3:GetObject
-        Resource: arn:aws:s3:::${self:provider.environment.DOCUMENT_S3_BUCKET}/*
+    role: TextractRole
+
+
+    # Policies:
+    #   - AWSLambdaExecute
+    #   - Statement:
+    #       - Effect: Allow
+    #         Action:
+    #           - "s3:PutObject"
+    #           - "s3:GetObject"
+    #         Resource: rn:aws:s3:::${self:provider.environment.DOCUMENT_S3_BUCKET}/*
+    # iamRoleStatements:
+    #   - Effect: Allow
+    #     Action:
+    #       - s3:PutObject
+    #       - s3:GetObject
+    #     Resource: arn:aws:s3:::${self:provider.environment.DOCUMENT_S3_BUCKET}/*
+      # - Effect: Allow
+      #   Action:
+      #     - "textract:*"
+      #   Resource: "*"
     # the following is done in an alternative fashion due to various errors
     # events:
     #   - s3: 
-    #       bucket: docbucket
+    #       bucket: S3BucketDocbucket
     #       event: s3:ObjectCreated:*
     #       rules:
     #         - suffix: .pdf
+    #       existing: true
+
+  storeOcrResult:
+    handler: src/lambda/http/storeOcrResult.handler
+    events:
+      - sns:
+          arn:
+            Fn::Join:
+              - ":"
+              - - "arn:aws:sns"
+                - Ref: "AWS::Region"
+                - Ref: "AWS::AccountId"
+                - ${self:provider.environment.OCR_SNS_TOPIC}
+          topicName: ${self:provider.environment.OCR_SNS_TOPIC}
+    role: TextractRole
 
 
 
@@ -193,7 +237,8 @@ resources:
                 - s3:GetObject
                 - s3:PutObject
               Resource: 'arn:aws:s3:::${self:provider.environment.DOCUMENT_S3_BUCKET}/*'
-        Bucket: !Ref S3BucketDocbucket
+        Bucket: 
+          Ref: S3BucketDocbucket
 
     CreatePreviewImagePermission:
       Type: AWS::Lambda::Permission
@@ -203,3 +248,59 @@ resources:
         Action: lambda:InvokeFunction
         SourceAccount: !Ref AWS::AccountId
         SourceArn: arn:aws:s3:::${self:provider.environment.DOCUMENT_S3_BUCKET}
+
+    # SNS Topic for fetching status of aws textract job
+    OcrStatusSNSTopic:
+      Type: AWS::SNS::Topic
+      Properties:
+        DisplayName: ${self:provider.environment.OCR_SNS_TOPIC} # human readble string e.g. ORC SNS Topic
+        TopicName: ${self:provider.environment.OCR_SNS_TOPIC}
+
+
+    TextractRole:
+      Type: AWS::IAM::Role
+      Properties:
+        RoleName: "TextractRole"
+        AssumeRolePolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: "Allow"
+              Principal:
+                Service:
+                  - "textract.amazonaws.com"
+                  - "lambda.amazonaws.com" # hier noetig???
+              Action:
+                - "sts:AssumeRole"
+        ManagedPolicyArns:
+          - "arn:aws:iam::aws:policy/AWSLambdaExecute"
+        Policies:
+          - PolicyName: "TextractS3RoleAccess"
+            PolicyDocument:
+              Version: "2012-10-17"
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - "sns:*"
+                  Resource: "*"
+                - Effect: Allow
+                  Action:
+                    - "textract:*"
+                  Resource: "*"
+                - Effect: Allow
+                  Action:
+                    - "s3:PutObject"
+                    - "s3:GetObject"
+                  Resource: rn:aws:s3:::${self:provider.environment.DOCUMENT_S3_BUCKET}/*
+                - Effect: Allow
+                  Action:
+                    - dynamodb:UpdateItem
+                  Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.DOCUMENT_TABLE}
+          # - PolicyName: "S3Access"
+          #   PolicyDocument:
+          #     Version: "2012-10-17"
+          #     Statement:
+          #       - Effect: Allow
+          #         Action:
+          #           - "s3:PutObject"
+          #           - "s3:GetObject"
+          #         Resource: rn:aws:s3:::${self:provider.environment.DOCUMENT_S3_BUCKET}/*

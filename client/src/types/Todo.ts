@@ -2,7 +2,7 @@ export interface Todo {
   documentId: string
   createdAt: string
   name: string
-  ocr:string
+  textract:string
   dueDate: string
   done: boolean
   attachmentUrl?: string
