@@ -88,6 +88,9 @@ functions:
           path: documents
           cors: true
           authorizer: Auth
+          request:
+            schema:
+              application/json: ${file(src/lambda/validator/createDocument.json)}
     iamRoleStatements:
       - Effect: Allow
         Action:
@@ -103,6 +106,8 @@ functions:
           path: documents/{documentId}
           cors: true
           authorizer: Auth
+          schema:
+            application/json: ${file(src/lambda/validator/updateDocument.json)}
     iamRoleStatements:
       - Effect: Allow
         Action:
