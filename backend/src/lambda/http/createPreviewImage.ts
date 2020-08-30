@@ -11,7 +11,7 @@ export const handler: S3Handler = async (events: S3Event) => {
     for (const record of events.Records) {
         const key = record.s3.object.key
         // filter out events created by the preview image itself
-        if (!key.includes(process.env.IMG_PREVIEW_SUFFIX) {
+        if (!key.includes(process.env.IMG_PREVIEW_SUFFIX)) {
             await createPreviewImage(key)
         }
 
