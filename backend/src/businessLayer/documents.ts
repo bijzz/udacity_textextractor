@@ -1,4 +1,4 @@
-import { triggerTextract, removeDocument, getDocument, fetchPersistTextractresult, createAndPersistImage, persistDocument, deleteDocument, getUploadUrl, updateUploadUrl  } from '../dataLayer/persistance'
+import { triggerTextract, removeDocument, getAllDocuments, fetchPersistTextractresult, createAndPersistImage, persistDocument, getUploadUrl, updateUploadUrl  } from '../dataLayer/persistance'
 import { createLogger } from '../utils/logger'
 const logger = createLogger('documents')
 import { CreateDocumentRequest } from '../requests/CreateDocumentRequest'
@@ -50,7 +50,7 @@ export async function fetchUploadUrl(documentId: string) {
 export async function getDocument(jwtToken:string) {
   
   let userId: string =  getUserId(jwtToken)
-  const result = await getDocument(userId)
+  const result = await getAllDocuments(userId)
   logger.info("Fetched Todos", { userId: userId })
   return result
 

@@ -195,7 +195,7 @@ export async function removeDocument(documentId: string) {
       }).promise()
 }
 
-export async function getDocument(userId: string) {
+export async function getAllDocuments(userId: string) {
     logger.info("getDocument ", {userId})
     // get via hashkey / better for bulk retrival
     // query have filter extensions servers-side

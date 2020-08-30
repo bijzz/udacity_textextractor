@@ -2,19 +2,16 @@
 
 ## Introduction
 
-This application allows to upload documents (e.g. pdf) and extract its content as raw text. It features:
+This application allows to upload documents (pdf) and extract its content as raw text. It features:
 
 - User management
 - Persistance of documents and their extracted content
 
-## API-Endpoints
+## ## Demonstration
 
-```
-/documents (GET : retrieve documents from database)
-/documents (POST : upload & scan a new document)
-```
 
-## Demonstration
+
+
 
 ## Setup
 

@@ -6,7 +6,7 @@ import { fetchUploadUrl } from '../../businessLayer/documents'
 export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   const documentId = event.pathParameters.documentId
 
-  const url = fetchUploadUrl(documentId)
+  const url = await fetchUploadUrl(documentId)
 
   return {
     statusCode: 201,
