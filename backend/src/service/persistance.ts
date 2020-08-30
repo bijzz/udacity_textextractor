@@ -43,7 +43,7 @@ export async function fetchPersistTextractresult(jobid: string, key: string) {
       text = text + block.Text
     }
   }
-  logger.info("Result", extractedText)
+  logger.debug("Result", extractedText)
   
 
   // var jp = require('jsonpath')
